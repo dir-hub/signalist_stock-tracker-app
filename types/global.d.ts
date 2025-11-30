@@ -1,3 +1,4 @@
+import type { Control, FieldError, UseFormRegister, RegisterOptions } from 'react-hook-form';
 declare global {
     type SignInFormData = {
         email: string;
@@ -17,7 +18,7 @@ declare global {
     type CountrySelectProps = {
         name: string;
         label: string;
-        control: Control;
+        control: Control<any>;
         error?: FieldError;
         required?: boolean;
     };
@@ -44,7 +45,7 @@ declare global {
         label: string;
         placeholder: string;
         options: readonly Option[];
-        control: Control;
+        control: Control<any>;
         error?: FieldError;
         required?: boolean;
     };
@@ -56,9 +57,25 @@ declare global {
     };
 
     type SearchCommandProps = {
+        // How the command should be rendered in the UI
         renderAs?: 'button' | 'text';
+
+        // Label for text-only render, kept for backwards compatibility
         label?: string;
-        initialStocks: StockWithWatchlistStatus[];
+
+        // Button-specific configuration
+        buttonLabel?: string;
+        buttonVariant?: 'primary' | 'secondary';
+
+        // Optional dialog / command-state control
+        open?: boolean;
+        setOpen?: (open: boolean) => void;
+
+        // Optional styling hook for the trigger
+        className?: string;
+
+        // Optional initial stocks payload when the command is used in watchlist context
+        initialStocks?: StockWithWatchlistStatus[];
     };
 
     type WelcomeEmailData = {
@@ -168,14 +185,6 @@ declare global {
         news?: MarketNewsArticle[];
     };
 
-    type SearchCommandProps = {
-        open?: boolean;
-        setOpen?: (open: boolean) => void;
-        renderAs?: 'button' | 'text';
-        buttonLabel?: string;
-        buttonVariant?: 'primary' | 'secondary';
-        className?: string;
-    };
 
     type AlertData = {
         symbol: string;

@@ -41,7 +41,7 @@ const SignUp = () => {
                 <InputField
                     name="fullName"
                     label="Full Name"
-                    placeholder="Jhon Doe"
+                    placeholder="John Doe"
                     register={register}
                     error={errors.fullName}
                     validation={{required: 'Full name is required', minLength: 2}}
@@ -52,7 +52,13 @@ const SignUp = () => {
                     placeholder="contact@yourmail.com"
                     register={register}
                     error={errors.email}
-                    validation={{required: 'Email is required', pattern: /^\S+@\S+$/i, message: 'Please enter a valid email address'}}
+                    validation={{
+                        required: 'Email is required',
+                        pattern: {
+                            value: /^\S+@\S+$/i,
+                            message: 'Please enter a valid email address',
+                        },
+                }}
                 />
                 <InputField
                     name="password"
