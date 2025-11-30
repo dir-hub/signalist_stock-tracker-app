@@ -15,20 +15,20 @@ declare global {
         preferredIndustry: string;
     };
 
-    type CountrySelectProps = {
+    type CountrySelectProps<TFormData = any> = {
         name: string;
         label: string;
-        control: Control<any>;
+        control: Control<TFormData>;
         error?: FieldError;
         required?: boolean;
     };
 
-    type FormInputProps = {
+    type FormInputProps<TFormData = any> = {
         name: string;
         label: string;
         placeholder: string;
         type?: string;
-        register: UseFormRegister;
+        register: UseFormRegister<TFormData>;
         error?: FieldError;
         validation?: RegisterOptions;
         disabled?: boolean;
@@ -40,12 +40,12 @@ declare global {
         label: string;
     };
 
-    type SelectFieldProps = {
+    type SelectFieldProps<TFormData = any> = {
         name: string;
         label: string;
         placeholder: string;
         options: readonly Option[];
-        control: Control<any>;
+        control: Control<TFormData>;
         error?: FieldError;
         required?: boolean;
     };
