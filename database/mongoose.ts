@@ -33,5 +33,6 @@ export const connectToDatabase = async () => {
         cached.promise = null;
         throw e;
     }
-    console.log(`Connected to MongoDB ${process.env.NODE_ENV} ${MONGODB_URI}`);
+    console.log(`Connected to MongoDB in ${process.env.NODE_ENV || 'development'} mode`);
+    return cached.conn;
 }
