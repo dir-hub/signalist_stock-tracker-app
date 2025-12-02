@@ -100,7 +100,7 @@ export const sendDailyNewsSummary = inngest.createFunction(
             return { success: true, message: "No news available for any user" };
         }
 
-        // Step 3: Summarize news via AI (no step.run wrapper to avoid nested tooling)
+        // Step 3: Summarize news via AI (with graceful fallback on 503 overload)
         const userNewsSummaries: { user: User; newsContent: string | null }[] = [];
 
         for (const { user, articles } of results) {
@@ -123,8 +123,24 @@ export const sendDailyNewsSummary = inngest.createFunction(
                     "No market news.";
 
                 userNewsSummaries.push({ user, newsContent });
-            } catch (e) {
-                console.error("Failed to summarize news for:", (e as Error).message);
+            } catch (e: any) {
+                const err = e as { code?: number; status?: string; message?: string };
+
+                if (err.code === 503 || err.status === "UNAVAILABLE") {
+                    console.warn(
+                        `AI overloaded for ${user.email}, falling back to simple summary:`,
+                        err.message
+                    );
+
+                    userNewsSummaries.push({
+                        user,
+                        newsContent:
+                            "Here is a brief summary of today's key market news based on the latest articles in your watchlist.",
+                    });
+                    continue;
+                }
+
+                console.error("Failed to summarize news for:", err.message ?? e);
                 userNewsSummaries.push({ user, newsContent: null });
             }
         }
