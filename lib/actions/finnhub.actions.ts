@@ -3,7 +3,7 @@
 import { getDateRange, validateArticle, formatArticle } from "@/lib/utils";
 
 const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
-const NEXT_PUBLIC_FINNHUB_API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY;
+const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 
 if (!FINNHUB_BASE_URL) {
     throw new Error("FINNHUB_BASE_URL must be defined");
@@ -33,7 +33,7 @@ export const fetchJSON = async <T>(
 
 export const getNews = async (symbols?: string[]): Promise<MarketNewsArticle[]> => {
     try {
-        if (!NEXT_PUBLIC_FINNHUB_API_KEY) {
+        if (!FINNHUB_API_KEY) {
             console.error("Finnhub API key is not configured");
             throw new Error("Finnhub API key is not configured");
         }
@@ -60,7 +60,7 @@ export const getNews = async (symbols?: string[]): Promise<MarketNewsArticle[]> 
                     try {
                         const url = `${FINNHUB_BASE_URL}/company-news?symbol=${encodeURIComponent(
                             symbol
-                        )}&from=${from}&to=${to}&token=${NEXT_PUBLIC_FINNHUB_API_KEY}`;
+                        )}&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`;
 
                         const articles = await fetchJSON<RawNewsArticle[]>(url, 600);
                         symbolNewsMap[symbol] = articles.filter((article) => validateArticle(article));
@@ -92,7 +92,7 @@ export const getNews = async (symbols?: string[]): Promise<MarketNewsArticle[]> 
         };
 
         const fetchGeneralNews = async (): Promise<MarketNewsArticle[]> => {
-            const url = `${FINNHUB_BASE_URL}/news?category=general&token=${NEXT_PUBLIC_FINNHUB_API_KEY}`;
+            const url = `${FINNHUB_BASE_URL}/news?category=general&token=${FINNHUB_API_KEY}`;
             const articles = await fetchJSON<RawNewsArticle[]>(url, 600);
 
             const seenIds = new Set<number>();
