@@ -85,7 +85,7 @@ export const formatArticle = (
     symbol?: string,
     index: number = 0
 ) => ({
-    id: isCompanyNews ? Date.now() + Math.random() : article.id + index,
+    id: isCompanyNews ? Date.now() * 1000 + index : article.id + index,
     headline: article.headline!.trim(),
     summary:
         article.summary!.trim().substring(0, isCompanyNews ? 200 : 150) + '...',
