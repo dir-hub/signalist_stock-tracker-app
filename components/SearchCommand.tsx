@@ -93,11 +93,11 @@ export default function SearchCommand({ renderAs = 'button', label = 'Add stock'
                             {isSearchMode ? 'No results found' : 'No stocks available'}
                         </div>
                     ) : (
-                        <div className="search-count">
-                            {isSearchMode ? 'Search results' : 'Popular stocks'}
-                            {` `}({displayStocks?.length || 0})
-                        </div>
                         <ul>
+                            <div className="search-count">
+                                {isSearchMode ? 'Search results' : 'Popular stocks'}
+                                {` `}({displayStocks?.length || 0})
+                            </div>
                             {displayStocks?.map((stock, i) => (
                                 <li key={`${stock.symbol}-${stock.exchange}-${i}`} className="search-item">
                                     <Link
