@@ -30,17 +30,23 @@ type NewsSummaryEmailData = {
 export const sendNewsSummaryEmail = async (
     { email, date, newsContent }: NewsSummaryEmailData
 ): Promise<void> => {
-    const htmlTemplate = NEWS_SUMMARY_EMAIL_TEMPLATE
-        .replace('{{date}}', date)
-        .replace('{{newsContent}}', newsContent);
+    try {
+        const htmlTemplate = NEWS_SUMMARY_EMAIL_TEMPLATE
+            .replace('{{date}}', date)
+            .replace('{{newsContent}}', newsContent);
 
-    const mailOptions = {
-        from: `"Signalist News" <signalist@stock.flash>`,
-        to: email,
-        subject: `Market News Summary Today - ${date}`,
-        text: `Today's market news summary from Signalist`,
-        html: htmlTemplate,
-    };
+        const mailOptions = {
+            from: `"Signalist News" <signalist@stock.flash>`,
+            to: email,
+            subject: `Market News Summary Today - ${date}`,
+            text: `Today's market news summary from Signalist`,
+            html: htmlTemplate,
+        };
 
-    await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
+        console.log(`News summary email sent successfully to ${email}`);
+    } catch (error) {
+        console.error(`Failed to send news summary email to ${email}:`, error);
+        throw error;
+    }
 };
