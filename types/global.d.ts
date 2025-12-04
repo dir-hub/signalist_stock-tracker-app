@@ -67,10 +67,6 @@ declare global {
         buttonLabel?: string;
         buttonVariant?: 'primary' | 'secondary';
 
-        // Optional dialog / command-state control
-        open?: boolean;
-        setOpen?: (open: boolean) => void;
-
         // Optional styling hook for the trigger
         className?: string;
 
