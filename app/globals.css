@@ -3,6 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
+
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -139,6 +140,18 @@
     body {
         @apply bg-gray-900 text-foreground;
     }
+
+    html,
+    body {
+        @apply overflow-y-scroll;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and old Edge */
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, new Edge */
+    }
 }
 
 @layer utilities {
@@ -215,13 +228,15 @@
         @apply cursor-pointer px-4 py-2 w-fit flex items-center gap-2 text-sm md:text-base bg-yellow-500 hover:bg-yellow-500 text-black font-medium rounded;
     }
     .search-dialog {
-        @apply !bg-gray-800 lg:min-w-[800px] border-gray-600 fixed top-10 left-1/2 -translate-x-1/2 translate-y-10;
+        @apply fixed left-1/2 top-10 -translate-x-1/2 translate-y-10 z-[60]
+               w-[96vw] sm:w-[90vw] max-w-[800px] max-h-[80vh]
+               flex flex-col !bg-gray-800 border border-gray-600 rounded-lg overflow-hidden;
     }
     .search-field {
-        @apply !bg-gray-800 border-b border-gray-600 relative;
+        @apply !bg-gray-800 px-4 pt-4 pb-3 border-b border-gray-700 relative;
     }
     .search-list {
-        @apply !bg-gray-800 max-h-[400px];
+        @apply flex-1 !bg-gray-800 overflow-y-auto;
     }
     .search-list-indicator {
         @apply px-5 py-2
@@ -230,7 +245,7 @@
         @apply py-6 !bg-transparent text-center text-gray-500;
     }
     .search-input {
-        @apply !bg-gray-800 border-0 text-gray-400 placeholder:text-gray-500 focus:ring-0 text-base h-14 pr-10;
+        @apply !bg-gray-800 border-0 text-gray-400 placeholder:text-gray-500 focus:ring-0 focus:outline-none text-base h-14 p-6 w-full;
     }
     .search-loader {
         @apply absolute right-12 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 animate-spin;
