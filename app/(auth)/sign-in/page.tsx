@@ -3,7 +3,7 @@ import {useForm} from "react-hook-form";
 import {Button} from "@/components/ui/button";
 import InputField from "@/components/forms/InputField";
 import FooterLink from "@/components/forms/FooterLink";
-import {signInWithEmail, signUpWithEmail} from "@/lib/actions/auth.actions";
+import {signInWithEmail} from "@/lib/actions/auth.actions";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
 
@@ -24,11 +24,17 @@ const SignIn = () => {
     const onSubmit = async (data: SignInFormData) => {
         try {
             const result = await signInWithEmail(data)
-            if(result.success) router.push('/')
+            if(result.success) {
+                router.push('/')
+            } else {
+                toast.error('Sign in failed', {
+                    description: result.error || 'Failed to sign in. Please check your credentials and try again.',
+                })
+            }
         }catch (e){
             console.error(e)
-            toast('Sign in failed', {
-                description: e instanceof Error ? e.message : 'Failed to sign in',
+            toast.error('Sign in failed', {
+                description: e instanceof Error ? e.message : 'Failed to sign in. Please try again.',
             })
         }
     }
@@ -60,7 +66,13 @@ const SignIn = () => {
                     type="password"
                     register={register}
                     error={errors.password}
-                    validation={{required: 'Password is required', minLength: 8}}
+                    validation={{
+                        required: 'Password is required', 
+                        minLength: {
+                            value: 8,
+                            message: 'Password must be at least 8 characters long'
+                        }
+                    }}
                 />
 
                 <Button type="submit" disabled={isSubmitting} className="yellow-btn w-full mt-5">

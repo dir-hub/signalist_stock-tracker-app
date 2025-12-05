@@ -9,7 +9,6 @@ import FooterLink from "@/components/forms/FooterLink";
 import {signUpWithEmail} from "@/lib/actions/auth.actions";
 import {useRouter} from "next/navigation";
 import {toast} from "sonner";
-import {error} from "better-auth/api";
 
 
 const SignUp = () => {
@@ -34,11 +33,17 @@ const SignUp = () => {
     const onSubmit = async (data: SignUpFormData) => {
         try {
            const result = await signUpWithEmail(data)
-            if(result.success) router.push('/')
+            if(result.success) {
+                router.push('/')
+            } else {
+                toast.error('Sign up failed', {
+                    description: result.error || 'Failed to create an account. Please try again.',
+                })
+            }
         }catch (e){
             console.error(e)
-            toast('Sign up failed', {
-                description: e instanceof Error ? e.message : 'Failed to create an account',
+            toast.error('Sign up failed', {
+                description: e instanceof Error ? e.message : 'Failed to create an account. Please try again.',
             })
         }
     }
@@ -76,7 +81,13 @@ const SignUp = () => {
                     type="password"
                     register={register}
                     error={errors.password}
-                    validation={{required: 'Password is required', minLength: 8}}
+                    validation={{
+                        required: 'Password is required', 
+                        minLength: {
+                            value: 8,
+                            message: 'Password must be at least 8 characters long'
+                        }
+                    }}
                 />
                 <CountrySelectField
                     name="country"

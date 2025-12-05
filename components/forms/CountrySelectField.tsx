@@ -66,7 +66,7 @@ const CountrySelectField = ({name, label, control, error, required = false}: Cou
                                     {selectedCountry ? (
                                         <div className="flex items-center gap-2">
                                             <span>{getFlagEmoji(selectedCountry.value)}</span>
-                                            <span className="text-white">{selectedCountry.label}</span>
+                                            <span>{selectedCountry.label}</span>
                                         </div>
                                     ) : (
                                         <span className="text-gray-500">Select country</span>
