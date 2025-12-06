@@ -2,11 +2,21 @@ import Link from "next/link";
 import Image from "next/image";
 import NavItems from "@/components/NavItems";
 import UserDropdown from "@/components/UserDropdown";
-import {useDebounce} from "@/hooks/useDebounce";
 import {searchStocks} from "@/lib/actions/finnhub.actions";
+import {getUserWatchlist} from "@/lib/actions/watchlist.actions";
 
 const Header = async ({user} : {user: User}) => {
     const initialStocks = await searchStocks();
+    const watchlistItems = await getUserWatchlist(user.id);
+    const watchlistSymbols = watchlistItems.map(item => item.symbol.toUpperCase());
+    
+    // Enrich stocks with watchlist status
+    const watchlistSymbolsSet = new Set(watchlistSymbols);
+    const enrichedStocks = initialStocks.map(stock => ({
+        ...stock,
+        isInWatchlist: watchlistSymbolsSet.has(stock.symbol.toUpperCase()),
+    }));
+    
     return (
         <header className="sticky top-0 header">
             <div className="container header-wrapper">
@@ -14,9 +24,9 @@ const Header = async ({user} : {user: User}) => {
                     <Image src="/assets/icons/logo.svg" alt="Signalist logo" width={140} height={32} className="h-8 w-auto cursor-pointer" />
                 </Link>
                 <nav className="hidden sm:block">
-                    <NavItems initialStocks={initialStocks}/>
+                    <NavItems initialStocks={enrichedStocks} userId={user.id} watchlistSymbols={watchlistSymbols}/>
                 </nav>
-                <UserDropdown user={user} initialStocks={initialStocks}/>
+                <UserDropdown user={user} initialStocks={enrichedStocks} userId={user.id} watchlistSymbols={watchlistSymbols}/>
             </div>
         </header>
     )
