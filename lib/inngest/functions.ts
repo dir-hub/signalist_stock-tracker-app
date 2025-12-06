@@ -10,6 +10,8 @@ export const sendSignUpEmail = inngest.createFunction(
     { id: "sign-up-email" },
     { event: "app/user.created" },
     async ({ event, step }) => {
+        console.log('sendSignUpEmail function triggered for:', event.data.email);
+        
         const userProfile = `
            - Country: ${event.data.country}
            - Investment goals: ${event.data.investmentGoals}
@@ -19,28 +21,61 @@ export const sendSignUpEmail = inngest.createFunction(
 
         const prompt = PERSONALIZED_WELCOME_EMAIL_PROMPT.replace("{{userProfile}}", userProfile);
 
-        const response = await step.ai.infer("generate-welcome-intro", {
-            model: step.ai.models.gemini({ model: "gemini-2.5-flash-lite" }),
-            body: {
-                contents: [
-                    {
-                        role: "user",
-                        parts: [{ text: prompt }],
-                    },
-                ],
-            },
-        });
+        let introtext = "Thanks for joining Signalist. You now have the tools to track markets and make smarter moves.";
+
+        try {
+            const response = await step.ai.infer("generate-welcome-intro", {
+                model: step.ai.models.gemini({ model: "gemini-2.5-flash-lite" }),
+                body: {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [{ text: prompt }],
+                        },
+                    ],
+                },
+            });
+
+            // Try multiple response structures to handle different API response formats
+            const candidate = response.candidates?.[0];
+            if (candidate) {
+                // Try content.parts structure first (as used in sendDailyNewsSummary)
+                const partFromContent = (candidate as any)?.content?.parts?.[0];
+                if (partFromContent && "text" in partFromContent) {
+                    introtext = (partFromContent as { text: string }).text;
+                } else {
+                    // Try direct parts structure
+                    const part = (candidate as any)?.parts?.[0];
+                    if (part && "text" in part) {
+                        introtext = (part as { text: string }).text;
+                    } else if (typeof part === 'string') {
+                        introtext = part;
+                    }
+                }
+            }
+
+            console.log("AI-generated intro:", introtext);
+        } catch (e: any) {
+            const err = e as { code?: number; status?: string; message?: string };
+            
+            if (err.code === 503 || err.status === "UNAVAILABLE") {
+                console.warn(
+                    `AI overloaded for welcome email, using default message:`,
+                    err.message
+                );
+            } else {
+                console.error("Failed to generate personalized welcome email:", err.message ?? e);
+            }
+            // Continue with default introtext if AI fails
+        }
 
         await step.run("send-welcome-email", async () => {
-            const part = response.candidates?.[0]?.parts?.[0];
-            const introtext =
-                (part && "text" in part ? part.text : null) ||
-                "Thanks for joining Signalist. You now have the tools to track markets and make smarter moves.";
-
             const {
                 data: { email, name },
             } = event;
 
+            console.log(`Sending welcome email to ${email} with personalized intro`);
+            
             return sendWelcomeEmail({
                 email,
                 name,
@@ -48,6 +83,8 @@ export const sendSignUpEmail = inngest.createFunction(
             });
         });
 
+        console.log('Welcome email process completed for:', event.data.email);
+        
         return {
             success: true,
             message: "Welcome email sent successfully",
