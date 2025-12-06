@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import NavItems from "@/components/NavItems";
 import UserDropdown from "@/components/UserDropdown";
-import {useDebounce} from "@/hooks/useDebounce";
 import {searchStocks} from "@/lib/actions/finnhub.actions";
 import {getUserWatchlist} from "@/lib/actions/watchlist.actions";
 
