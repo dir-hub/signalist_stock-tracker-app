@@ -3,16 +3,19 @@
 import { useEffect, useState } from "react"
 import { CommandDialog, CommandEmpty, CommandInput, CommandList } from "@/components/ui/command"
 import {Button} from "@/components/ui/button";
-import {Loader2,  TrendingUp} from "lucide-react";
+import {Loader2, TrendingUp, Star} from "lucide-react";
 import Link from "next/link";
 import {searchStocks} from "@/lib/actions/finnhub.actions";
 import {useDebounce} from "@/hooks/useDebounce";
+import {addToWatchlist, removeFromWatchlist} from "@/lib/actions/watchlist.actions";
+import {toast} from "sonner";
 
-export default function SearchCommand({ renderAs = 'button', label = 'Add stock', initialStocks = [] }: SearchCommandProps) {
+export default function SearchCommand({ renderAs = 'button', label = 'Add stock', initialStocks = [], userId, watchlistSymbols = [] }: SearchCommandProps) {
     const [open, setDialogOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
     const [loading, setLoading] = useState(false)
     const [stocks, setStocks] = useState<StockWithWatchlistStatus[]>(initialStocks);
+    const [watchlistSymbolsSet, setWatchlistSymbolsSet] = useState(new Set(watchlistSymbols.map(s => s.toUpperCase())));
 
     const isSearchMode = !!searchTerm.trim();
     const displayStocks = isSearchMode ? stocks : stocks.slice(0, 10);
@@ -37,7 +40,12 @@ export default function SearchCommand({ renderAs = 'button', label = 'Add stock'
         setLoading(true)
         try {
             const results = await searchStocks(searchTerm.trim());
-            setStocks(results);
+            // Enrich search results with watchlist status
+            const enrichedResults = results.map(stock => ({
+                ...stock,
+                isInWatchlist: watchlistSymbolsSet.has(stock.symbol.toUpperCase()),
+            }));
+            setStocks(enrichedResults);
         } catch {
             setStocks([])
         } finally {
@@ -50,6 +58,18 @@ export default function SearchCommand({ renderAs = 'button', label = 'Add stock'
     useEffect(() => {
         debouncedSearch();
     }, [searchTerm]);
+
+    // Update watchlist symbols set when prop changes
+    useEffect(() => {
+        setWatchlistSymbolsSet(new Set(watchlistSymbols.map(s => s.toUpperCase())));
+        // Also update stocks with watchlist status
+        setStocks(prevStocks => 
+            prevStocks.map(stock => ({
+                ...stock,
+                isInWatchlist: watchlistSymbols.includes(stock.symbol.toUpperCase()),
+            }))
+        );
+    }, [watchlistSymbols]);
 
     // Prevent background page scroll while the search dialog is open
     useEffect(() => {
@@ -67,6 +87,62 @@ export default function SearchCommand({ renderAs = 'button', label = 'Add stock'
         setDialogOpen(false);
         setSearchTerm("");
         setStocks(initialStocks);
+    }
+
+    const handleToggleWatchlist = async (e: React.MouseEvent, stock: StockWithWatchlistStatus) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (!userId) {
+            toast.error("Please sign in to add stocks to watchlist");
+            return;
+        }
+
+        const isInWatchlist = watchlistSymbolsSet.has(stock.symbol.toUpperCase());
+        
+        try {
+            if (isInWatchlist) {
+                const result = await removeFromWatchlist(userId, stock.symbol);
+                if (result.success) {
+                    const newSet = new Set(watchlistSymbolsSet);
+                    newSet.delete(stock.symbol.toUpperCase());
+                    setWatchlistSymbolsSet(newSet);
+                    
+                    // Update the stock in the list
+                    setStocks(prevStocks => 
+                        prevStocks.map(s => 
+                            s.symbol === stock.symbol 
+                                ? { ...s, isInWatchlist: false }
+                                : s
+                        )
+                    );
+                    toast.success('Removed from watchlist');
+                } else {
+                    toast.error(result.message);
+                }
+            } else {
+                const result = await addToWatchlist(userId, stock.symbol, stock.name);
+                if (result.success) {
+                    const newSet = new Set(watchlistSymbolsSet);
+                    newSet.add(stock.symbol.toUpperCase());
+                    setWatchlistSymbolsSet(newSet);
+                    
+                    // Update the stock in the list
+                    setStocks(prevStocks => 
+                        prevStocks.map(s => 
+                            s.symbol === stock.symbol 
+                                ? { ...s, isInWatchlist: true }
+                                : s
+                        )
+                    );
+                    toast.success('Added to watchlist');
+                } else {
+                    toast.error(result.message);
+                }
+            }
+        } catch (error) {
+            toast.error('Something went wrong');
+        }
     }
 
     return (
@@ -98,26 +174,41 @@ export default function SearchCommand({ renderAs = 'button', label = 'Add stock'
                                 {isSearchMode ? 'Search results' : 'Popular stocks'}
                                 {` `}({displayStocks?.length || 0})
                             </div>
-                            {displayStocks?.map((stock, i) => (
-                                <li key={`${stock.symbol}-${stock.exchange}-${i}`} className="search-item">
-                                    <Link
-                                        href={`/stocks/${stock.symbol}`}
-                                        onClick={handleSelectStock}
-                                        className="search-item-link"
-                                    >
-                                        <TrendingUp className="h-4 w-4 text-gray-500" />
-                                        <div  className="flex-1">
-                                            <div className="search-item-name">
-                                                {stock.name}
+                            {displayStocks?.map((stock, i) => {
+                                const isInWatchlist = watchlistSymbolsSet.has(stock.symbol.toUpperCase());
+                                return (
+                                    <li key={`${stock.symbol}-${stock.exchange}-${i}`} className="search-item flex items-center">
+                                        <Link
+                                            href={`/stocks/${stock.symbol}`}
+                                            onClick={handleSelectStock}
+                                            className="search-item-link flex-1"
+                                        >
+                                            <TrendingUp className="h-4 w-4 text-gray-500" />
+                                            <div  className="flex-1">
+                                                <div className="search-item-name">
+                                                    {stock.name}
+                                                </div>
+                                                <div className="text-sm text-gray-500">
+                                                    {stock.symbol} • {stock.exchange} • {stock.type}
+                                                </div>
                                             </div>
-                                            <div className="text-sm text-gray-500">
-                                                {stock.symbol} | {stock.exchange } | {stock.type}
-                                            </div>
-                                        </div>
-                                        {/*<Star />*/}
-                                    </Link>
-                                </li>
-                            ))}
+                                        </Link>
+                                        <button
+                                            onClick={(e) => handleToggleWatchlist(e, stock)}
+                                            className="ml-2 mr-2 p-1 hover:bg-gray-700 rounded transition-colors flex-shrink-0"
+                                            aria-label={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
+                                        >
+                                            <Star 
+                                                className={`h-5 w-5 transition-colors ${
+                                                    isInWatchlist 
+                                                        ? "fill-yellow-500 text-yellow-500" 
+                                                        : "text-gray-400 hover:text-yellow-500"
+                                                }`}
+                                            />
+                                        </button>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )
                     }

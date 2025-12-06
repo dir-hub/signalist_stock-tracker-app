@@ -72,6 +72,12 @@ declare global {
 
         // Optional initial stocks payload when the command is used in watchlist context
         initialStocks?: StockWithWatchlistStatus[];
+        
+        // User ID for watchlist functionality
+        userId?: string;
+        
+        // Watchlist symbols for initial state
+        watchlistSymbols?: string[];
     };
 
     type WelcomeEmailData = {
